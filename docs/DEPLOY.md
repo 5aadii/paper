@@ -90,7 +90,7 @@ Keep these values open in a tab, since you'll paste them below. They are all und
 | `APP_PUBLIC_URL` | leave as `http://localhost:3000` for now and fix it in step 5 |
 
 4. Click **Create / Apply** and wait for the build to finish (a few minutes).
-5. Open `https://<your-engine>.onrender.com/health`. If it returns `{"status":"ok"...}`, the engine is live. Copy this base URL for the next step.
+5. Open `https://<your-engine>.onrender.com/health`. If it shows `{"ok":true}`, the engine is live. Copy this base URL for the next step.
 
 > The free Render plan sleeps after 15 minutes without visits, so the first request after a nap takes about a minute. To keep it awake, use a free monitor such as https://cron-job.org to open `/health` every 10 minutes.
 

@@ -46,14 +46,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#121212" },
-  ],
+  themeColor: "#ffffff",
 };
 
 // Applies the saved reading theme and text size before first paint, so there is no flash.
-const PREFS_SCRIPT = `try{var t=localStorage.getItem("me-theme");if(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t)document.documentElement.dataset.theme=t;var s=localStorage.getItem("me-text");if(s)document.documentElement.dataset.text=s;}catch(e){}`;
+// The site opens in the light (white) theme unless the reader picked another one.
+const PREFS_SCRIPT = `try{var t=localStorage.getItem("me-theme");if(t)document.documentElement.dataset.theme=t;var s=localStorage.getItem("me-text");if(s)document.documentElement.dataset.text=s;}catch(e){}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
