@@ -46,7 +46,7 @@ export default function StepSpecific({ answers, setAnswers }: StepProps) {
       </label>
       <div className="mt-4 flex flex-wrap gap-2">
         {answers.customPhrases.map((p) => (
-          <span key={p} className="flex items-center gap-1 bg-accent px-3 py-1.5 font-body text-sm text-paper">
+          <span key={p} className="btn btn-primary btn-sm flex items-center gap-1 font-body text-sm">
             {p}
             <button
               type="button"
@@ -70,7 +70,7 @@ export default function StepSpecific({ answers, setAnswers }: StepProps) {
           </div>
         </>
       )}
-      <p className="mt-4 font-label text-[11px] uppercase tracking-widest text-muted">{answers.customPhrases.length}/8</p>
+      <p className="mt-4 font-label text-xs uppercase tracking-widest text-muted">{answers.customPhrases.length}/8</p>
     </div>
   );
 }

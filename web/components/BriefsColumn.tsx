@@ -17,8 +17,8 @@ export default function BriefsColumn({
   if (!items.length) return null;
   return (
     <section id="sec-briefs" className="scroll-mt-4">
-      <h3 className="border-t-[3px] border-rule pt-2 font-label text-[11px] font-bold uppercase tracking-widest">In Brief</h3>
-      <ul className="mt-2 divide-y divide-ink/20">
+      <h3 className="border-t-[3px] border-rule-strong pt-2 font-label text-xs font-bold uppercase tracking-widest">In Brief</h3>
+      <ul className="mt-2 divide-y divide-rule">
         {items.map((it) => (
           <li key={it.item_id} className="py-2">
             <Link
@@ -28,7 +28,7 @@ export default function BriefsColumn({
             >
               <span className="group-hover:underline group-hover:decoration-accent">· {it.headline}</span>
               {readIds.has(it.item_id) && (
-                <span className="ml-2 border border-muted/60 px-1 align-middle font-label text-[9px] font-normal uppercase tracking-widest text-muted">
+                <span className="ml-2 border border-muted/60 px-1 align-middle font-label text-xs font-normal uppercase tracking-widest text-muted">
                   Read
                 </span>
               )}

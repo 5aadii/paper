@@ -12,7 +12,7 @@ export type StepProps = {
   setAnswers: (fn: (a: OnboardingAnswers) => OnboardingAnswers) => void;
 };
 
-export const labelCls = "block font-label text-[11px] uppercase tracking-widest text-muted";
+export const labelCls = "block font-label text-xs uppercase tracking-widest text-muted";
 export const inputCls =
   "mt-1 w-full border-b border-ink bg-transparent py-2 font-body text-xl outline-none focus:border-accent";
 export const chipCls =

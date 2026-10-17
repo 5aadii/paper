@@ -11,12 +11,12 @@ export default function Landing() {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-12 md:py-20">
       <div className="border-t border-rule pt-1">
-        <div className="border-t-[3px] border-rule" />
+        <div className="border-t-[3px] border-rule-strong" />
       </div>
-      <p className="mt-6 text-center font-label text-[11px] uppercase tracking-widest text-muted">
+      <p className="mt-6 text-center font-label text-xs uppercase tracking-widest text-muted">
         Vol. 1 · A personal newspaper
       </p>
-      <h1 className="mt-3 text-center font-headline text-5xl font-black leading-[1.05] md:text-7xl">
+      <h1 className="mt-3 text-center font-masthead text-5xl font-bold leading-[1.05] md:text-8xl">
         The Morning Edition
       </h1>
       <p className="mx-auto mt-6 max-w-2xl text-center font-body text-xl italic leading-relaxed text-muted">
@@ -25,13 +25,13 @@ export default function Landing() {
       <div className="mx-auto mt-10 flex flex-col gap-3 sm:flex-row">
         <Link
           href="/signup"
-          className="bg-accent px-7 py-3 text-center font-label text-xs font-semibold uppercase tracking-widest text-paper hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          className="btn btn-primary text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         >
           Start my paper
         </Link>
         <Link
           href="/login"
-          className="border border-ink px-7 py-3 text-center font-label text-xs font-semibold uppercase tracking-widest hover:bg-ink hover:text-paper"
+          className="btn btn-glass text-center"
         >
           Log in
         </Link>
@@ -49,7 +49,7 @@ export default function Landing() {
           ))}
         </div>
       </div>
-      <div className="border-t-[3px] border-rule" />
+      <div className="border-t-[3px] border-rule-strong" />
     </main>
   );
 }

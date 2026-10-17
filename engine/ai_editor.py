@@ -11,7 +11,7 @@ import time
 import httpx
 
 import config
-from config import EDITION_SIZE, SUMMARY_MAX_CHARS
+from config import AI_TIMEOUT_SECONDS, EDITION_SIZE, SUMMARY_MAX_CHARS
 from prompts import EDITOR_SYSTEM, EDITOR_USER, SUMMARY_RULES
 from ranking import fallback_story, first_sentence, section_label, truncate, why_template
 
@@ -147,7 +147,7 @@ def _post(payload: dict) -> httpx.Response:
             "X-Title": "The Morning Edition",
         },
         json=payload,
-        timeout=60,
+        timeout=AI_TIMEOUT_SECONDS,
     )
 
 
@@ -165,10 +165,7 @@ def _call(system: str, user: str) -> tuple[str, str]:
         try:
             r = _post(payload)
         except httpx.TimeoutException:
-            if not retried:
-                retried = True
-                time.sleep(2)
-                continue
+            # No retry: a second slow attempt would double the reader's wait. The local fallback takes over.
             raise EditorError("timeout", "OpenRouter timed out")
         except httpx.HTTPError:
             raise EditorError("http_error", "could not reach OpenRouter")
@@ -210,7 +207,7 @@ def run_editor(profile: dict, candidates: list[dict], labels: dict[str, str] | N
     size = EDITION_SIZE.get(style, 11)
     system = EDITOR_SYSTEM.format(edition_size=size, summary_rule=SUMMARY_RULES.get(style, SUMMARY_RULES["balanced"]))
     cand_json = [{"id": c["id"], "title": c["title"], "source": c["source_name"], "topic": c["topic"],
-                  "explore": bool(c.get("is_explore")), "snippet": (c.get("snippet") or "")[:400]}
+                  "explore": bool(c.get("is_explore")), "photo": bool(c.get("image_url")), "snippet": (c.get("snippet") or "")[:400]}
                  for c in candidates]
     user = EDITOR_USER.format(profile_json=json.dumps(profile, ensure_ascii=False),
                               candidates_json=json.dumps(cand_json, ensure_ascii=False))

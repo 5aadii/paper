@@ -32,7 +32,7 @@ export default function StepStyle({ answers, setAnswers }: StepProps) {
             >
               <span className={`font-headline text-3xl font-bold ${on ? "text-accent" : ""}`}>{s.title}</span>
               <span className="mt-2 block font-body text-[15px]">{s.detail}</span>
-              <span className="mt-3 block font-label text-[11px] uppercase tracking-widest text-muted">{s.time}</span>
+              <span className="mt-3 block font-label text-xs uppercase tracking-widest text-muted">{s.time}</span>
             </button>
           );
         })}

@@ -34,8 +34,13 @@ class GenerateBody(BaseModel):
     force: bool = False
 
 
+class AssistantBody(BaseModel):
+    query: str
+
+
 class RecomputeBody(BaseModel):
     user_id: str
+    live: bool = False  # True when triggered by a reading event (keeps the per-edition ▲/▼ baseline)
 
 
 @app.get("/health")
@@ -54,6 +59,23 @@ def generate(body: GenerateBody, background: BackgroundTasks) -> dict:
     if needs_run:
         background.add_task(run_pipeline_sync, edition_id, body.user_id)
     return {"edition_id": edition_id, "status": status}
+
+
+def _generate_all() -> None:
+    for user_id in db.onboarded_user_ids():
+        try:
+            edition_id, _status, needs_run = prepare_edition(user_id)
+            if needs_run:
+                run_pipeline_sync(edition_id, user_id)
+        except Exception as e:  # one reader's failure never stops the morning run
+            log.error("cron_edition_failed reason=%s", type(e).__name__)
+
+
+@app.post("/editions/generate-all", status_code=202, dependencies=[Depends(require_service_key)])
+def generate_all(background: BackgroundTasks) -> dict:
+    """Daily freshness (SPEC Section 8.11): print today's paper for every onboarded reader."""
+    background.add_task(_generate_all)
+    return {"queued": True}
 
 
 @app.get("/editions/{edition_id}/pdf", dependencies=[Depends(require_service_key)])
@@ -75,5 +97,21 @@ def learning_recompute(body: RecomputeBody) -> list[dict]:
     interests = db.get_interests(body.user_id)
     events = db.get_events_since(body.user_id, (now - timedelta(days=30)).isoformat())
     rows = recompute_weights(interests, events, now)
-    db.save_weights(body.user_id, rows)
+    db.save_weights(body.user_id, rows, keep_previous=body.live)
     return [{k: v for k, v in r.items() if k != "is_new"} for r in rows]
+
+
+@app.post("/assistant/search", dependencies=[Depends(require_service_key)])
+def assistant_search(body: AssistantBody) -> dict:
+    from assistant import answer
+
+    if not body.query.strip():
+        raise HTTPException(status_code=400, detail="empty_query")
+    return answer(body.query)
+
+
+@app.get("/cartoons", dependencies=[Depends(require_service_key)])
+def cartoons() -> dict:
+    from cartoons import get_cartoons
+
+    return {"cartoons": get_cartoons()}

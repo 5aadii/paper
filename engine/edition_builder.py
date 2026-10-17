@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 
 import db
 from ai_editor import run_editor
+from article_reader import read_articles
 from config import EDITION_SIZE, NO_REPEAT_LAST_N_EDITIONS
 from fetcher import FeedSpec, enrich_images, fetch_all
 from learning import recompute_weights, source_affinity
@@ -16,6 +17,9 @@ from prompts import PROMPT_VERSION
 from ranking import build_fallback_layout, dedupe, filter_articles, select_candidates
 from sources import EXPLORE_POOL, TOPICS, google_news_rss, topic_label
 import config
+
+READ_AHEAD = 20  # candidates read in full while the editor chooses
+READ_BUDGET_SECONDS = 15
 
 log = logging.getLogger("engine.builder")
 
@@ -66,8 +70,10 @@ def build_feed_specs(interests: list[dict], region: str) -> list[FeedSpec]:
         t = TOPICS.get(topic)
         if not t:
             continue
+        # Publisher feeds carry photos and direct links, so every region gets them;
+        # the region decides which Google News edition is searched.
+        specs += [FeedSpec(url=u, topic=topic, source_hint=None, is_explore=False) for u in t["feeds"]]
         if region in ("global", "both"):
-            specs += [FeedSpec(url=u, topic=topic, source_hint=None, is_explore=False) for u in t["feeds"]]
             specs.append(FeedSpec(url=google_news_rss(t["query"], "global"), topic=topic, source_hint=None, is_explore=False))
         if region in ("pakistan", "both"):
             specs += [FeedSpec(url=u, topic=topic, source_hint=None, is_explore=False) for u in t["pakistan_feeds"]]
@@ -104,6 +110,28 @@ def order_sections(stories: list[dict], cand_by_id: dict, weights: dict[str, flo
 ROLE_ORDER = {"lead": 0, "feature": 1, "standard": 2, "brief": 3}
 
 
+def promote_photo_lead(stories: list[dict], cand_by_id: dict) -> None:
+    """The front page shows photos on the lead and the features, so those slots should hold stories
+    that have one. Swap roles with the first standard/brief stories (in the editor's order) that have
+    a photo. Explore stories stay put."""
+    def has_photo(s: dict) -> bool:
+        return bool(cand_by_id[s["id"]].get("image_url"))
+
+    def donor(roles: tuple[str, ...]) -> dict | None:
+        return next((s for s in stories if s["layout_role"] in roles and has_photo(s)
+                     and not cand_by_id[s["id"]].get("is_explore")), None)
+
+    lead = next((s for s in stories if s["layout_role"] == "lead"), None)
+    if lead and not has_photo(lead):
+        d = donor(("feature", "standard"))
+        if d:
+            lead["layout_role"], d["layout_role"] = d["layout_role"], "lead"
+    for f in [s for s in stories if s["layout_role"] == "feature" and not has_photo(s)]:
+        d = donor(("standard",))
+        if d:
+            f["layout_role"], d["layout_role"] = "standard", "feature"
+
+
 # ---------------------------------------------------------------- the pipeline
 async def run_pipeline(edition_id: str, user_id: str) -> None:
     try:
@@ -133,8 +161,8 @@ async def run_pipeline(edition_id: str, user_id: str) -> None:
         candidates = select_candidates(articles, now, weights, affinity, custom_phrases)
         if not candidates:
             raise RuntimeError("no_candidates")
+
         await enrich_images(sorted(candidates, key=lambda c: -c["score"]))
-        url_to_id = db.upsert_articles(candidates)
         cand_by_id = {c["id"]: c for c in candidates}
 
         # 7. one AI call, else local fallback
@@ -145,7 +173,14 @@ async def run_pipeline(edition_id: str, user_id: str) -> None:
                        for w in sorted(new_weights, key=lambda w: -w["weight"]) if not w["topic"].startswith("custom:")],
             "custom_interests": custom_phrases,
         }
-        result = run_editor(ai_profile, candidates, labels=labels)
+        # The editor works from headlines + snippets. While it thinks, read the strongest candidates in
+        # full (resolves Google News links, gets the article text, lead photo and byline), so reading
+        # adds no time to the wait.
+        top = sorted(candidates, key=lambda c: -c["score"])[:READ_AHEAD]
+        result, _ = await asyncio.gather(
+            asyncio.to_thread(run_editor, ai_profile, candidates, labels),
+            read_articles(top, budget_seconds=READ_BUDGET_SECONDS),
+        )
         if result["success"]:
             layout, ai_status, error_type, model_id = result["data"], "success", None, result["model_id"]
         else:
@@ -153,8 +188,15 @@ async def run_pipeline(edition_id: str, user_id: str) -> None:
             ai_status, error_type, model_id = "fallback", result["error_type"], config.OPENROUTER_MODEL or None
 
         # 8. save items
-        db.update_edition(edition_id, progress="Setting the type")
         stories = layout["stories"][: EDITION_SIZE.get(style, 11)]
+        db.update_edition(edition_id, progress="Setting the type")
+        await read_articles([cand_by_id[s["id"]] for s in stories], budget_seconds=8)
+        # Resolved links can collide with stories already in the paper or with each other.
+        seen_urls: set[str] = set()
+        stories = [s for s in stories
+                   if not (cand_by_id[s["id"]]["url"] in seen_urls or seen_urls.add(cand_by_id[s["id"]]["url"]))]
+        url_to_id = db.upsert_articles(candidates)
+        promote_photo_lead(stories, cand_by_id)
         sec_order = order_sections(stories, cand_by_id, weights)
         rows = []
         for s_pos, sec in enumerate(sec_order):
@@ -219,6 +261,7 @@ def load_edition_json(edition_id: str) -> dict | None:
             "key_points": it.get("key_points") or [], "why_this": it.get("why_this") or "",
             "source_name": a.get("source_name") or "", "published_at": a.get("published_at"),
             "url": a.get("url") or "", "image_url": a.get("image_url"),
+            "body": a.get("body") or "", "author": a.get("author") or "",
             "topic": it.get("topic"), "is_explore": bool(it.get("is_explore")),
         })
     return {

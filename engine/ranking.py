@@ -14,7 +14,8 @@ from sources import topic_label
 
 MAX_PER_TOPIC = 8
 EXPLORE_WEIGHT = 0.6
-IMAGE_BOOST = 1.25
+IMAGE_BOOST = 1.5
+THIN_PENALTY = 0.7
 
 
 # ---------------------------------------------------------------- text helpers
@@ -103,7 +104,8 @@ def score_article(a: dict, now: datetime, weights: dict[str, float],
     hay = f'{a["title"]} {a.get("snippet", "")}'.lower()
     keyword_hits = sum(1 for p in custom_phrases if p and p.lower() in hay)
     image_factor = IMAGE_BOOST if a.get("image_url") else 1.0  # photos make the front page look like a paper
-    return topic_weight * recency * source_factor * (1 + 0.3 * keyword_hits) * image_factor
+    content_factor = 1.0 if len(a.get("snippet") or "") >= 60 else THIN_PENALTY  # headline-only items read poorly
+    return topic_weight * recency * source_factor * (1 + 0.3 * keyword_hits) * image_factor * content_factor
 
 
 def select_candidates(articles: list[dict], now: datetime, weights: dict[str, float],

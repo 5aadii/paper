@@ -1,36 +1,291 @@
 @import "tailwindcss";
 
 /*
- * "Newsprint" design tokens — SPEC Section 8.1.
- * Use as Tailwind classes: bg-paper, text-ink, text-muted, border-rule, text-accent,
- * font-headline, font-body, font-label.
+ * Design tokens. A clean broadsheet look in the spirit of the NYT:
+ * white page, near-black ink, light grey hairlines between stories, heavy black rules for structure.
+ * Use as Tailwind classes: bg-paper, text-ink, text-muted, border-rule, border-rule-strong, text-accent,
+ * bg-wash, font-masthead, font-headline, font-body, font-label.
+ *
+ * Reader themes (light / sepia / dark) are set on <html data-theme="…"> by ReaderPrefs.
  */
 :root {
-  --paper: #fbf8f1;
-  --ink: #1a1a1a;
-  --muted: #5f5a50;
-  --rule: #1a1a1a;
-  --accent: #8b1e1e;
+  --paper: #ffffff;
+  --ink: #121212;
+  --muted: #5a5a5a;
+  --rule: #e2e2e2;
+  --rule-strong: #121212;
+  --accent: #0071e3;
+  --wash: #f5f5f7;
+  --story-size: 20px;
+  /* Glass surfaces (Apple-style: translucent tint + sheen + bright rim + soft inner glow) */
+  --glass-tint: rgba(255, 255, 255, 0.22);
+  --glass-tint-strong: rgba(255, 255, 255, 0.6);
+  --glass-sheen: linear-gradient(160deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.12) 40%, rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 0.22) 100%);
+  --glass-rim: rgba(255, 255, 255, 0.8);
+  --glass-edge: rgba(15, 23, 42, 0.08);
+  --glass-shadow: 0 0 0 0.5px rgba(15, 23, 42, 0.1), 0 14px 34px -12px rgba(30, 41, 90, 0.3), 0 2px 6px rgba(15, 23, 42, 0.06);
+  --glass-inner: inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 1px rgba(255, 255, 255, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.35), inset 0 -10px 22px -10px rgba(120, 140, 200, 0.18);
+  --glass-press: rgba(255, 255, 255, 0.8);
+  --backdrop: radial-gradient(1100px 760px at -10% -15%, rgba(0, 122, 255, 0.28), transparent 62%),
+    radial-gradient(1000px 700px at 110% 0%, rgba(175, 82, 222, 0.24), transparent 62%),
+    radial-gradient(1100px 760px at 105% 110%, rgba(255, 45, 85, 0.17), transparent 62%),
+    radial-gradient(1000px 760px at -10% 105%, rgba(48, 209, 188, 0.22), transparent 62%),
+    radial-gradient(900px 600px at 50% 50%, rgba(90, 200, 250, 0.08), transparent 70%);
+  color-scheme: light;
 }
+
+:root[data-theme="sepia"] {
+  --paper: #f8f1e3;
+  --ink: #2b2118;
+  --muted: #6e6253;
+  --rule: #e2d6bf;
+  --rule-strong: #2b2118;
+  --accent: #a2541d;
+  --wash: #efe5d1;
+  --glass-tint: rgba(255, 248, 235, 0.42);
+  --glass-tint-strong: rgba(255, 248, 235, 0.7);
+  --glass-rim: rgba(255, 250, 240, 0.75);
+  --glass-edge: rgba(60, 40, 20, 0.1);
+  --backdrop: radial-gradient(900px 620px at -5% -10%, rgba(214, 140, 60, 0.22), transparent 60%),
+    radial-gradient(800px 560px at 105% 5%, rgba(190, 90, 60, 0.16), transparent 60%),
+    radial-gradient(800px 600px at 50% 110%, rgba(150, 120, 60, 0.16), transparent 60%);
+}
+
+:root[data-theme="dark"] {
+  --paper: #121212;
+  --ink: #e8e6e1;
+  --muted: #a3a09a;
+  --rule: #2e2e2e;
+  --rule-strong: #e8e6e1;
+  --accent: #2997ff;
+  --wash: #1c1c1e;
+  --glass-tint: rgba(255, 255, 255, 0.08);
+  --glass-tint-strong: rgba(36, 36, 42, 0.62);
+  --glass-sheen: linear-gradient(160deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0) 58%, rgba(255, 255, 255, 0.08) 100%);
+  --glass-rim: rgba(255, 255, 255, 0.16);
+  --glass-edge: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 14px 36px -10px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.35);
+  --glass-inner: inset 0 1px 0.5px rgba(255, 255, 255, 0.3), inset 0 -1px 1px rgba(255, 255, 255, 0.06), inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 0 22px rgba(255, 255, 255, 0.05);
+  --glass-press: rgba(255, 255, 255, 0.4);
+  --backdrop: radial-gradient(900px 620px at -5% -10%, rgba(10, 132, 255, 0.35), transparent 60%),
+    radial-gradient(800px 560px at 105% 5%, rgba(191, 90, 242, 0.3), transparent 60%),
+    radial-gradient(900px 600px at 100% 105%, rgba(255, 55, 95, 0.18), transparent 60%),
+    radial-gradient(800px 600px at -5% 100%, rgba(100, 210, 255, 0.2), transparent 60%);
+  color-scheme: dark;
+}
+
+:root[data-text="s"] { --story-size: 18px; }
+:root[data-text="l"] { --story-size: 22px; }
+:root[data-text="xl"] { --story-size: 25px; }
 
 @theme inline {
   --color-paper: var(--paper);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
   --color-accent: var(--accent);
+  --color-wash: var(--wash);
 
-  --font-headline: var(--font-playfair), Georgia, "Times New Roman", serif;
+  --font-masthead: var(--font-unifraktur), "Old English Text MT", Georgia, serif;
+  --font-headline: var(--font-newsreader), Georgia, "Times New Roman", serif;
   --font-body: var(--font-source-serif), Georgia, "Times New Roman", serif;
-  --font-label: var(--font-inter), Arial, Helvetica, sans-serif;
-  --font-sans: var(--font-inter), Arial, Helvetica, sans-serif;
+  /* UI text uses the system font: San Francisco on Apple devices, Segoe UI on Windows. */
+  --font-label: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", var(--font-franklin), Arial, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", var(--font-franklin), Arial, sans-serif;
   --font-serif: var(--font-source-serif), Georgia, "Times New Roman", serif;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  background: var(--paper);
+  background: var(--backdrop), var(--paper);
+  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-body);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ---------------------------------------------------------------- glass
+ * Apple-style glass, like the iPhone passcode keys: a see-through tint over a strong blur,
+ * a diagonal sheen, a bright rim and a soft inner glow. The coloured wallpaper on <body>
+ * is what makes the blur visible.
+ */
+@layer components {
+  .glass,
+  .glass-strong,
+  .glass-card,
+  .btn-glass,
+  .segmented,
+  .glass-key {
+    background: var(--glass-sheen), var(--glass-tint);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    backdrop-filter: blur(28px) saturate(190%);
+    border: 1px solid var(--glass-rim);
+    box-shadow: var(--glass-shadow), var(--glass-inner);
+  }
+  .glass-strong {
+    background: var(--glass-sheen), var(--glass-tint-strong);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    backdrop-filter: blur(40px) saturate(200%);
+  }
+  .glass-card { border-radius: 1.5rem; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 9999px;
+    padding: 0.62rem 1.25rem;
+    font-family: var(--font-label);
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    line-height: 1.2;
+    white-space: nowrap;
+    transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active:not(:disabled) { transform: scale(0.95); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:disabled { cursor: default; }
+  .btn-sm { padding: 0.38rem 0.85rem; font-size: 0.8125rem; }
+
+  /* Glossy coloured button: the accent with a light dome on top. */
+  .btn-primary {
+    color: #fff;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.08) 48%, rgba(255, 255, 255, 0) 52%, rgba(255, 255, 255, 0.12) 100%), var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 70%, #fff);
+    box-shadow: 0 8px 22px -6px color-mix(in srgb, var(--accent) 60%, transparent), inset 0 1px 1px rgba(255, 255, 255, 0.6), inset 0 -2px 6px rgba(0, 0, 0, 0.12);
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+  }
+  .btn-primary:hover:not(:disabled) { filter: brightness(1.08) saturate(1.1); }
+
+  .btn-glass { color: var(--ink); }
+  .btn-glass:hover:not(:disabled) { background: var(--glass-sheen), var(--glass-tint-strong); }
+  .btn-glass:active:not(:disabled) { background: var(--glass-sheen), var(--glass-press); }
+  .btn-glass[aria-pressed="true"] {
+    color: #fff;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 55%), var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 70%, #fff);
+  }
+
+  /* A round see-through key, like the iPhone passcode pad. Lights up while pressed. */
+  .glass-key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.75rem;
+    height: 4.75rem;
+    border-radius: 9999px;
+    color: var(--ink);
+    font-family: var(--font-label);
+    font-size: 2rem;
+    font-weight: 300;
+    line-height: 1;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.35s ease, transform 0.15s ease;
+  }
+  .glass-key:active:not(:disabled),
+  .glass-key[data-pressed="true"] {
+    background: var(--glass-sheen), var(--glass-press);
+    transition-duration: 0s;
+  }
+  .glass-key:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .glass-key:disabled { opacity: 0.4; }
+
+  /* Segmented control (theme / text size / sections). */
+  .segmented {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 9999px;
+  }
+  .segmented > button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 1.9rem;
+    padding: 0 0.6rem;
+    border-radius: 9999px;
+    color: var(--ink);
+    font-family: var(--font-label);
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .segmented > button:hover:not(:disabled) { background: var(--glass-tint); }
+  .segmented > button[aria-pressed="true"],
+  .seg-active {
+    background: var(--glass-sheen), var(--glass-tint-strong);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), var(--glass-inner);
+  }
+  .segmented > button:disabled { opacity: 0.35; }
+
+  .glass-input {
+    border-radius: 9999px;
+    background: var(--glass-tint);
+    border: 1px solid var(--glass-rim);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08), inset 0 -1px 0 rgba(255, 255, 255, 0.4);
+    outline: none;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+  .glass-input:focus {
+    background: var(--glass-tint-strong);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+}
+
+/* Panels pop in like iOS sheets. */
+@keyframes sheet-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.sheet-in { animation: sheet-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both; transform-origin: bottom right; }
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* Newspaper drop cap on the first paragraph of a story. */
+.dropcap::first-letter {
+  float: left;
+  font-family: var(--font-headline);
+  font-weight: 700;
+  font-size: 4.1em;
+  line-height: 0.8;
+  padding: 0.08em 0.1em 0 0;
+  color: var(--ink);
+}
+
+/* The article body: comfortable measure, size and rhythm. */
+.story-body {
+  font-family: var(--font-body);
+  font-size: var(--story-size);
+  line-height: 1.7;
+  font-optical-sizing: auto;
+  hyphens: auto;
+}
+.story-body p + p {
+  margin-top: 1.1em;
+}
+
+/* Comfortable reading: proper quotes, ligatures, balanced headlines. */
+h1, h2, h3 { text-wrap: balance; font-kerning: normal; font-optical-sizing: auto; }
+p { text-wrap: pretty; font-variant-ligatures: common-ligatures; }
+
+/* Photos ease in instead of popping. */
+.photo-fade {
+  animation: fadein 0.4s ease both;
+}
+
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -42,4 +297,8 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+@media print {
+  nav, .no-print { display: none !important; }
 }

@@ -20,24 +20,24 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-export type Topic = { slug: string; label: string; icon: LucideIcon };
+export type Topic = { slug: string; label: string; icon: LucideIcon; blurb: string };
 
 export const TOPICS: Topic[] = [
-  { slug: "world", label: "World", icon: Globe },
-  { slug: "pakistan", label: "Pakistan", icon: Flag },
-  { slug: "business", label: "Business & Markets", icon: BriefcaseBusiness },
-  { slug: "technology", label: "Technology", icon: Cpu },
-  { slug: "ai", label: "Artificial Intelligence", icon: Bot },
-  { slug: "startups", label: "Startups", icon: Rocket },
-  { slug: "programming", label: "Programming & Dev", icon: Code },
-  { slug: "science", label: "Science", icon: FlaskConical },
-  { slug: "space", label: "Space", icon: Orbit },
-  { slug: "health", label: "Health", icon: HeartPulse },
-  { slug: "climate", label: "Climate & Environment", icon: Leaf },
-  { slug: "cricket", label: "Cricket", icon: Trophy },
-  { slug: "football", label: "Football", icon: Volleyball },
-  { slug: "entertainment", label: "Film, TV & Culture", icon: Clapperboard },
-  { slug: "gaming", label: "Gaming", icon: Gamepad2 },
+  { slug: "world", label: "World", icon: Globe, blurb: "Global politics, conflicts and diplomacy" },
+  { slug: "pakistan", label: "Pakistan", icon: Flag, blurb: "National politics, economy and society" },
+  { slug: "business", label: "Business & Markets", icon: BriefcaseBusiness, blurb: "Companies, markets and the economy" },
+  { slug: "technology", label: "Technology", icon: Cpu, blurb: "Gadgets, platforms and the tech industry" },
+  { slug: "ai", label: "Artificial Intelligence", icon: Bot, blurb: "Models, research and AI policy" },
+  { slug: "startups", label: "Startups", icon: Rocket, blurb: "Founders, funding rounds and launches" },
+  { slug: "programming", label: "Programming & Dev", icon: Code, blurb: "Languages, tools and developer culture" },
+  { slug: "science", label: "Science", icon: FlaskConical, blurb: "Discoveries and research breakthroughs" },
+  { slug: "space", label: "Space", icon: Orbit, blurb: "Missions, launches and astronomy" },
+  { slug: "health", label: "Health", icon: HeartPulse, blurb: "Medicine, wellbeing and public health" },
+  { slug: "climate", label: "Climate & Environment", icon: Leaf, blurb: "Weather, energy and the environment" },
+  { slug: "cricket", label: "Cricket", icon: Trophy, blurb: "Tests, ODIs, T20s and the PSL" },
+  { slug: "football", label: "Football", icon: Volleyball, blurb: "Leagues, transfers and match results" },
+  { slug: "entertainment", label: "Film, TV & Culture", icon: Clapperboard, blurb: "Film, TV, music and the arts" },
+  { slug: "gaming", label: "Gaming", icon: Gamepad2, blurb: "Games, consoles and esports" },
 ];
 
 export const TOPIC_LABELS: Record<string, string> = Object.fromEntries(TOPICS.map((t) => [t.slug, t.label]));

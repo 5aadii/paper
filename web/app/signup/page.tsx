@@ -1,6 +1,11 @@
-// Sign up — collects first name as display_name (SPEC Section 8.2).
+// Signup (SPEC Section 8.2).
+import { Suspense } from "react";
 import AuthForm from "@/components/AuthForm";
 
 export default function SignupPage() {
-  return <AuthForm mode="signup" />;
+  return (
+    <Suspense>
+      <AuthForm mode="signup" />
+    </Suspense>
+  );
 }

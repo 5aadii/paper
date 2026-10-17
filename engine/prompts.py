@@ -9,10 +9,12 @@ Choose the stories, order them, and write the paper.
 Rules:
 - Use ONLY candidate ids from the list. Never invent stories, facts, numbers or quotes.
 - Base every summary only on the title and snippet given. If the snippet is thin, keep the summary short.
+- Write about the news itself. Never mention the snippet, the feed, the headline, "the report", "the listed source" or missing details. If little is known, write one plain factual sentence restating the news.
 - Select exactly {edition_size} stories. Exactly one has layout_role "lead".
 - layout_role must be one of: lead, feature, standard, brief. Use 2 features. Use "brief" for the last 3 stories.
 - Prefer stories that match the reader's highest-weight topics and custom interests.
 - Include 1 or 2 candidates marked explore=true, in a section named "Explore".
+- Strongly prefer candidates with photo=true for the lead and the 2 features: the front page shows their photos.
 - headline: clear and specific, no clickbait, max 90 characters. It is the main thing the reader sees on the front page.
 - dek: one short teaser line shown under the headline on the front page, max 120 characters. Adds one fact the headline does not say. No clickbait, no questions.
 - summary: {summary_rule}. Neutral tone. Shown when the reader opens the story.

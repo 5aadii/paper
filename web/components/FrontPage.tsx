@@ -1,6 +1,5 @@
 "use client";
 // The broadsheet front page: headlines + deks only (SPEC Section 8.6).
-import { Download } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { logEvent } from "@/lib/events";
 import { sectionAnchor, type Edition, type EditionItem } from "@/lib/edition";
@@ -9,6 +8,8 @@ import EditionMenu from "./EditionMenu";
 import EditorsNote from "./EditorsNote";
 import HeadlineBlock from "./HeadlineBlock";
 import Masthead from "./Masthead";
+import MorningQuiz from "./MorningQuiz";
+import ReadAloud from "./ReadAloud";
 import ThreeThings from "./ThreeThings";
 
 type Placed = { item: EditionItem; section: string; anchor?: string };
@@ -36,7 +37,8 @@ export default function FrontPage({
     }
   }, [scrollKey]);
 
-  const hrefFor = (it: EditionItem) => `/paper/${edition.edition_date}/story/${it.item_id}`;
+  const fromQ = isToday ? "?from=today" : "";
+  const hrefFor = (it: EditionItem) => `/paper/${edition.edition_date}/story/${it.item_id}${fromQ}`;
   const sectionOf = new Map<string, string>();
   edition.sections.forEach((s) => s.items.forEach((it) => sectionOf.set(it.item_id, s.name)));
 
@@ -114,7 +116,7 @@ export default function FrontPage({
       />
       <nav
         aria-label="Sections"
-        className="flex gap-4 overflow-x-auto whitespace-nowrap border-b border-rule py-2 font-label text-[11px] uppercase tracking-widest"
+        className="flex gap-4 overflow-x-auto whitespace-nowrap border-b border-rule py-2 font-label text-xs uppercase tracking-widest"
       >
         <span className="font-bold">Inside:</span>
         {insideSections.map((name, i) => (
@@ -132,9 +134,28 @@ export default function FrontPage({
       {/* Lead + editor rail */}
       <div className="grid gap-6 border-b border-rule py-5 lg:grid-cols-12 lg:gap-0">
         <div className="lg:col-span-8 lg:pr-6">{lead && block(lead)}</div>
-        <aside className="space-y-5 lg:col-span-4 lg:border-l lg:border-rule lg:pl-6">
+        <aside className="space-y-5 lg:col-span-4 lg:border-l lg:border-rule lg:pl-6" aria-label="Your morning briefing">
+          <div className="flex items-center justify-between gap-3 border-b border-rule-strong pb-2">
+            <h2 className="font-headline text-2xl font-semibold">Your Morning Briefing</h2>
+            <ReadAloud
+              label="Read it to me"
+              parts={[
+                edition.editors_note,
+                ...edition.sections.flatMap((s) => s.items.filter((i) => i.layout_role !== "brief").map((i) => `${i.headline}. ${i.dek}`)),
+                ...(edition.three_things.length ? ["Three things to remember today.", ...edition.three_things.map((t) => t.text)] : []),
+              ]}
+            />
+          </div>
           <EditorsNote note={edition.editors_note} />
-          <ThreeThings things={edition.three_things} hrefFor={(id) => `/paper/${edition.edition_date}/story/${id}`} />
+          <ThreeThings
+            things={edition.three_things}
+            hrefFor={(id) => `/paper/${edition.edition_date}/story/${id}${fromQ}`}
+            onOpen={(id) => {
+              const it = edition.sections.flatMap((x) => x.items).find((x) => x.item_id === id);
+              if (it) open(it);
+            }}
+          />
+          <MorningQuiz edition={edition} />
         </aside>
       </div>
 
@@ -144,7 +165,7 @@ export default function FrontPage({
           {columns.map((col, ci) => (
             <div
               key={ci}
-              className={`divide-y divide-ink/30 md:px-5 ${ci === 0 ? "md:pl-0" : "md:border-l md:border-rule"} ${
+              className={`divide-y divide-rule md:px-5 ${ci === 0 ? "md:pl-0" : "md:border-l md:border-rule"} ${
                 col.length ? "" : "hidden md:block"
               }`}
             >
@@ -168,23 +189,15 @@ export default function FrontPage({
 
       {explore.length > 0 && (
         <section id={sectionAnchor("Explore")} className="mt-6 scroll-mt-4 border border-dashed border-ink/60 p-4">
-          <h3 className="font-label text-[11px] font-bold uppercase tracking-widest">Explore — something new</h3>
+          <h3 className="font-label text-xs font-bold uppercase tracking-widest">Explore — something new</h3>
           <div className="mt-3 grid gap-6 md:grid-cols-2">{explore.map((p) => block({ ...p, anchor: undefined }))}</div>
         </section>
       )}
 
-      <p className="mt-10 border-t-[3px] border-rule pt-3 text-center font-body italic text-muted">
+      <p className="mt-10 border-t-[3px] border-rule-strong pt-3 text-center font-body italic text-muted">
         That&rsquo;s your paper for today. See you tomorrow morning.
       </p>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-rule bg-paper p-3 sm:hidden">
-        <a
-          href={`/api/pdf/${edition.edition_id}`}
-          className="flex items-center justify-center gap-2 bg-accent py-3 font-label text-xs font-semibold uppercase tracking-widest text-paper"
-        >
-          <Download size={14} aria-hidden /> Download PDF
-        </a>
-      </div>
     </main>
   );
 }

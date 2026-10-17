@@ -24,6 +24,7 @@ SUMMARY_MAX_CHARS = {"quick": 220, "balanced": 380, "deep": 600}
 MAX_CANDIDATES = 40
 EXPLORE_CANDIDATES = 3
 FEED_TIMEOUT_SECONDS = 8
+AI_TIMEOUT_SECONDS = 40         # one attempt; after this the local fallback edition is used
 MAX_ARTICLE_AGE_HOURS = 36       # fall back to 72 if fewer than 20 candidates
 NO_REPEAT_LAST_N_EDITIONS = 3
 WEIGHT_MIN, WEIGHT_MAX = 0.1, 3.0

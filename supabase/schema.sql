@@ -36,8 +36,15 @@ create table if not exists public.articles (
   image_url text,
   topic text,
   published_at timestamptz,
-  fetched_at timestamptz not null default now()
+  fetched_at timestamptz not null default now(),
+  body text,          -- full article text read from the publisher ("\n\n" between paragraphs)
+  author text,
+  word_count int
 );
+-- Safe to re-run on a database created before these columns existed.
+alter table public.articles add column if not exists body text;
+alter table public.articles add column if not exists author text;
+alter table public.articles add column if not exists word_count int;
 
 -- EDITIONS -------------------------------------------------------------
 create table if not exists public.editions (

@@ -140,19 +140,40 @@ class SectionMarker(Flowable):
 
 
 def _fetch_image(url: str | None):
+    """Download a photo and re-encode it as JPEG (handles WebP/PNG/CMYK). Returns (BytesIO, w, h) or None."""
     if not url or not str(url).startswith("http"):
         return None
     try:
         import httpx
-        r = httpx.get(url, timeout=4, follow_redirects=True)
+        from PIL import Image as PILImage
+
+        r = httpx.get(url, timeout=5, follow_redirects=True, headers={"User-Agent": _UA})
         r.raise_for_status()
-        return ImageReader(io.BytesIO(r.content))
+        im = PILImage.open(io.BytesIO(r.content))
+        im.thumbnail((1200, 1200))
+        im = im.convert("RGB")
+        out = io.BytesIO()
+        im.save(out, "JPEG", quality=82)
+        out.seek(0)
+        return out, im.width, im.height
     except Exception:
         return None
 
 
+_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+       "(KHTML, like Gecko) Chrome/124.0 Safari/537.36")
+
+
 # ---------------------------------------------------------------- renderer
 def render_edition_pdf(edition: dict) -> bytes:
+    """Never fails because of a photo: if a render with photos breaks, it is redone without them."""
+    try:
+        return _render(edition, with_images=True)
+    except Exception:
+        return _render(edition, with_images=False)
+
+
+def _render(edition: dict, with_images: bool) -> bytes:
     F = _register_fonts()
     app_url = os.getenv("APP_PUBLIC_URL", "").strip() or "the web edition"
     paper_name = str(edition.get("paper_name") or "The Morning Edition")
@@ -220,9 +241,9 @@ def render_edition_pdf(edition: dict) -> bytes:
         if it.get("dek"):
             text.append(Paragraph(esc(it["dek"]), S["lead_dek"]))
         text += [byline(it), Paragraph("Full story, page 2 →", S["jump"])]
-        img = _fetch_image(it.get("image_url"))
-        if img:
-            iw, ih = img.getSize()
+        fetched = _fetch_image(it.get("image_url")) if with_images else None
+        if fetched:
+            img, iw, ih = fetched
             tw = W * 0.34
             th = min(LEAD_H - 16, tw * ih / iw if iw else tw)
             pic = Image(img, width=tw, height=th, kind="proportional")

@@ -34,7 +34,9 @@ def get_interests(user_id: str) -> list[dict]:
     return _t("interests").select("*").eq("user_id", user_id).execute().data or []
 
 
-def save_weights(user_id: str, rows: list[dict]) -> None:
+def save_weights(user_id: str, rows: list[dict], keep_previous: bool = False) -> None:
+    """keep_previous=True (live updates while reading) leaves previous_weight alone, so the ▲/▼ on
+    the interests page still shows the change since the last edition."""
     now = datetime.utcnow().isoformat() + "Z"
     for r in rows:
         if r.get("is_new"):
@@ -43,9 +45,10 @@ def save_weights(user_id: str, rows: list[dict]) -> None:
                 "base_weight": 0.0, "weight": r["weight"], "previous_weight": None, "updated_at": now,
             }, on_conflict="user_id,topic").execute()
         else:
-            _t("interests").update({
-                "weight": r["weight"], "previous_weight": r["previous_weight"], "updated_at": now,
-            }).eq("user_id", user_id).eq("topic", r["topic"]).execute()
+            fields = {"weight": r["weight"], "updated_at": now}
+            if not keep_previous:
+                fields["previous_weight"] = r["previous_weight"]
+            _t("interests").update(fields).eq("user_id", user_id).eq("topic", r["topic"]).execute()
 
 
 def get_events_since(user_id: str, since_iso: str) -> list[dict]:
@@ -126,6 +129,7 @@ def upsert_articles(articles: list[dict]) -> dict[str, str]:
         rows.append({
             "url": a["url"], "title": a["title"], "source_name": a.get("source_name"),
             "snippet": a.get("snippet"), "image_url": a.get("image_url"), "topic": a.get("topic"),
+            "body": a.get("body"), "author": a.get("author"), "word_count": a.get("word_count"),
             "published_at": a["published_at"].isoformat() if isinstance(a.get("published_at"), datetime) else None,
             "fetched_at": now,
         })
@@ -142,6 +146,22 @@ def insert_items(rows: list[dict]) -> list[dict]:
 
 def get_items_with_articles(edition_id: str) -> list[dict]:
     return (_t("edition_items")
-            .select("*, articles(url, title, source_name, published_at, image_url, snippet)")
+            .select("*, articles(url, title, source_name, published_at, image_url, snippet, body, author)")
             .eq("edition_id", edition_id).order("section_position").order("position")
             .execute().data or [])
+
+
+def search_articles(terms: list[str], after: str | None, before: str | None, limit: int = 10) -> list[dict]:
+    """Title search in the shared articles cache (used by the News Assistant)."""
+    q = _t("articles").select("url,title,source_name,snippet,image_url,published_at")
+    q = q.or_(",".join(f"title.ilike.%{t.replace(',', ' ').replace('%', '')}%" for t in terms))
+    if after:
+        q = q.gte("published_at", after)
+    if before:
+        q = q.lte("published_at", before + "T23:59:59Z")
+    return q.order("published_at", desc=True).limit(limit).execute().data or []
+
+
+def onboarded_user_ids() -> list[str]:
+    rows = _t("profiles").select("id").eq("onboarded", True).limit(5000).execute().data or []
+    return [r["id"] for r in rows]

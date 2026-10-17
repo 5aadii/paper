@@ -34,3 +34,25 @@ def test_minimal_edition_without_images():
           "editors_note": "", "three_things": [], "sections": [{"name": "World", "items": [
               {**no_images(SAMPLE)["sections"][0]["items"][0], "layout_role": "lead"}]}]}
     assert render_edition_pdf(ed).startswith(b"%PDF")
+
+
+def test_lead_photo_renders_in_any_format(monkeypatch):
+    """Regression: a real lead photo used to crash the whole PDF. WebP and transparent PNGs must work too."""
+    import io
+
+    import httpx
+    from PIL import Image as PILImage
+
+    class Resp:
+        def __init__(self, content):
+            self.content = content
+
+        def raise_for_status(self):
+            pass
+
+    for fmt, mode in (("JPEG", "RGB"), ("WEBP", "RGB"), ("PNG", "RGBA")):
+        buf = io.BytesIO()
+        PILImage.new(mode, (800, 500)).save(buf, fmt)
+        monkeypatch.setattr(httpx, "get", lambda *a, _c=buf.getvalue(), **k: Resp(_c))
+        from pdf.render import _render
+        assert _render(copy.deepcopy(SAMPLE), with_images=True).startswith(b"%PDF")

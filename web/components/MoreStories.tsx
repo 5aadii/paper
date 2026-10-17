@@ -22,10 +22,10 @@ export default function MoreStories({
   const href = (it: EditionItem) => `/paper/${date}/story/${it.item_id}`;
   const link = "group block py-2 font-headline text-lg font-bold leading-snug";
   return (
-    <nav className="mt-12 grid gap-6 border-t-[3px] border-rule pt-4 md:grid-cols-2" aria-label="More stories">
+    <nav className="mt-12 grid gap-6 border-t-[3px] border-rule-strong pt-4 md:grid-cols-2" aria-label="More stories">
       {next && (
         <div>
-          <h2 className="font-label text-[11px] font-bold uppercase tracking-widest">Next in {sectionName}</h2>
+          <h2 className="font-label text-xs font-bold uppercase tracking-widest">Next in {sectionName}</h2>
           <Link href={href(next.item)} onClick={() => onOpen(next.item)} className={link}>
             <span className="group-hover:underline group-hover:decoration-accent">{next.item.headline}</span> →
           </Link>
@@ -33,8 +33,8 @@ export default function MoreStories({
       )}
       {more.length > 0 && (
         <div>
-          <h2 className="font-label text-[11px] font-bold uppercase tracking-widest">More from today&rsquo;s paper</h2>
-          <ul className="divide-y divide-ink/20">
+          <h2 className="font-label text-xs font-bold uppercase tracking-widest">More from today&rsquo;s paper</h2>
+          <ul className="divide-y divide-rule">
             {more.map((m) => (
               <li key={m.item.item_id}>
                 <Link href={href(m.item)} onClick={() => onOpen(m.item)} className={link}>

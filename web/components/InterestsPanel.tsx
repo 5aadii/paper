@@ -1,7 +1,8 @@
 "use client";
 // Weight bars with ▲/▼ change, badges and simple controls for /interests (SPEC Section 8.10).
 import { Star, X } from "lucide-react";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { topicLabel } from "@/lib/topics";
 
@@ -21,8 +22,57 @@ const BADGE: Record<InterestRow["kind"], string> = {
   learned: "Learned from your reading",
 };
 
-export default function InterestsPanel({ initial, userId }: { initial: InterestRow[]; userId: string }) {
+const BASE_REASON: Record<InterestRow["kind"], string> = {
+  topic: "You picked this when you set up your paper.",
+  custom: "A phrase you asked us to watch for.",
+  learned: "You engaged with stories on this topic outside your picks, so your paper started following it.",
+};
+
+export default function InterestsPanel({
+  initial,
+  userId,
+  why,
+  historyCount,
+}: {
+  initial: InterestRow[];
+  userId: string;
+  why: Record<string, string>;
+  historyCount: number;
+}) {
+  const router = useRouter();
   const [rows, setRows] = useState(initial);
+  // Weights learn on their own from reading time; adopt fresh server values whenever they arrive.
+  const [seen, setSeen] = useState(initial);
+  if (seen !== initial) {
+    setSeen(initial);
+    setRows(initial);
+  }
+
+  // Coming back to this tab shows the latest learned weights, no button needed.
+  useEffect(() => {
+    const onShow = () => document.visibilityState === "visible" && router.refresh();
+    document.addEventListener("visibilitychange", onShow);
+    window.addEventListener("focus", onShow);
+    const t = window.setInterval(onShow, 30_000);
+    return () => {
+      document.removeEventListener("visibilitychange", onShow);
+      window.removeEventListener("focus", onShow);
+      window.clearInterval(t);
+    };
+  }, [router]);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
+
+  async function recompute() {
+    setSyncing(true);
+    setSyncMsg(null);
+    const res = await fetch("/api/learning", { method: "POST" }).catch(() => null);
+    setSyncing(false);
+    if (res?.ok) {
+      setSyncMsg("Weights updated from your latest reading.");
+      router.refresh();
+    } else setSyncMsg("The engine is warming up — try again in a minute.");
+  }
   const [phrase, setPhrase] = useState("");
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
@@ -59,10 +109,30 @@ export default function InterestsPanel({ initial, userId }: { initial: InterestR
   }
 
   return (
-    <section className="mt-10 border-t-[3px] border-rule pt-3">
-      <h2 className="font-label text-[11px] font-bold uppercase tracking-widest">Your interests, by weight</h2>
+    <section className="mt-10 border-t-[3px] border-rule-strong pt-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-label text-xs font-bold uppercase tracking-widest">Your interests, by weight</h2>
+        <button
+          type="button"
+          onClick={recompute}
+          disabled={syncing}
+          className="btn btn-glass btn-sm disabled:opacity-50"
+        >
+          {syncing ? "Refreshing…" : "Refresh"}
+        </button>
+      </div>
+      <p className="mt-2 font-body text-sm text-muted">
+        These update automatically as you read: time spent on a story, likes, skips and quiz answers all count.
+      </p>
+      {syncMsg && <p className="mt-1 font-body text-sm text-muted">{syncMsg}</p>}
+      {historyCount < 5 && (
+        <p className="mt-3 bg-wash px-3 py-2 font-body text-[15px]">
+          Not much reading history yet, so these weights mostly reflect what you picked. Open, read, like or skip a few
+          stories and they will start to move.
+        </p>
+      )}
       {error && <p className="mt-2 font-body text-accent">{error}</p>}
-      <ul className="mt-3 divide-y divide-ink/20">
+      <ul className="mt-3 divide-y divide-rule">
         {sorted.map((r) => {
           const delta = r.previous_weight == null ? null : r.weight - r.previous_weight;
           return (
@@ -71,7 +141,10 @@ export default function InterestsPanel({ initial, userId }: { initial: InterestR
                 <p className="font-headline text-lg font-bold leading-tight">
                   {r.kind === "custom" ? r.label : topicLabel(r.topic) || r.label}
                 </p>
-                <p className="font-label text-[10px] uppercase tracking-widest text-muted">{BADGE[r.kind]}</p>
+                <p className="font-label text-xs uppercase tracking-widest text-muted">{BADGE[r.kind]}</p>
+                <p className="mt-1 max-w-[260px] font-body text-[13px] leading-snug text-ink/75">
+                  {why[r.topic] ?? BASE_REASON[r.kind]}
+                </p>
               </div>
               <div className="col-span-2 flex items-center gap-3 md:col-span-1">
                 <div className="h-3 flex-1 bg-ink/10" aria-hidden>
@@ -91,7 +164,7 @@ export default function InterestsPanel({ initial, userId }: { initial: InterestR
                   <button
                     type="button"
                     onClick={() => toggleLove(r)}
-                    className={`inline-flex items-center gap-1 border px-2 py-1 font-label text-[10px] uppercase tracking-widest ${
+                    className={`inline-flex items-center gap-1 border px-2 py-1 font-label text-xs uppercase tracking-widest ${
                       r.base_weight >= 2 ? "border-accent bg-accent text-paper" : "border-ink"
                     }`}
                   >
@@ -115,7 +188,7 @@ export default function InterestsPanel({ initial, userId }: { initial: InterestR
           placeholder="Add a phrase, e.g. PSL"
           className="flex-1 border-b border-ink bg-transparent py-2 font-body text-lg outline-none focus:border-accent"
         />
-        <button type="submit" className="bg-accent px-4 font-label text-xs font-semibold uppercase tracking-widest text-paper">
+        <button type="submit" className="btn btn-primary">
           Add
         </button>
       </form>

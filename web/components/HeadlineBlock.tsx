@@ -3,12 +3,13 @@
 import { X } from "lucide-react";
 import Link from "next/link";
 import { timeAgo, type EditionItem } from "@/lib/edition";
+import { photo as proxied } from "@/lib/img";
 
 const SIZES = {
-  lead: "text-[40px] leading-[1.05] md:text-[56px] lg:text-[64px]",
-  feature: "text-[26px] leading-[1.1] md:text-[30px]",
-  standard: "text-[19px] leading-[1.15] md:text-[20px]",
-  brief: "text-[15px] leading-snug",
+  lead: "text-[34px] leading-[1.08] tracking-[-0.01em] md:text-[44px] lg:text-[50px]",
+  feature: "text-[24px] leading-[1.15] md:text-[26px]",
+  standard: "text-[19px] leading-[1.2] md:text-[20px]",
+  brief: "text-[16px] leading-snug",
 };
 
 export default function HeadlineBlock({
@@ -33,30 +34,35 @@ export default function HeadlineBlock({
   anchorId?: string;
 }) {
   const role = item.layout_role;
-  const img = item.image_url && role !== "brief" ? item.image_url : null;
-  const hideBroken = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const el = e.currentTarget.closest("[data-photo]") as HTMLElement | null;
-    (el ?? e.currentTarget).style.display = "none";
+  const img = role !== "brief" ? proxied(item.image_url) : null;
+  const hideImg = (img: HTMLImageElement) => {
+    const el = img.closest("[data-photo]") as HTMLElement | null;
+    (el ?? img).style.display = "none";
+  };
+  const hideBroken = (e: React.SyntheticEvent<HTMLImageElement>) => hideImg(e.currentTarget);
+  // A photo can fail before the page becomes interactive (onError never fires then); catch that too.
+  const checkLoaded = (img: HTMLImageElement | null) => {
+    if (img && img.complete && img.naturalWidth === 0) hideImg(img);
   };
   const photo = (cls: string) =>
     img ? (
       <figure data-photo className={cls}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={img} alt="" loading={role === "lead" ? "eager" : "lazy"} referrerPolicy="no-referrer"
-          onError={hideBroken} className="h-full w-full object-cover" />
+          onError={hideBroken} ref={checkLoaded} className="photo-fade h-full w-full object-cover" />
       </figure>
     ) : null;
   const text = (
     <>
-      <p className="font-label text-[11px] font-semibold uppercase tracking-widest text-accent">{section}</p>
+      <p className="font-label text-xs font-semibold uppercase tracking-[0.12em] text-muted">{section}</p>
       <h2
-        className={`mt-1 font-headline font-bold decoration-accent decoration-1 underline-offset-4 group-hover:underline ${SIZES[role]}`}
+        className={`mt-1.5 font-headline font-semibold decoration-ink/40 decoration-1 underline-offset-4 group-hover:underline ${SIZES[role]}`}
       >
         {item.headline}
       </h2>
       {item.dek && (
         <p
-          className={`mt-2 font-body italic text-ink/85 ${role === "lead" ? "text-xl md:text-2xl" : "text-[17px]"} ${
+          className={`mt-2 font-body leading-snug text-muted ${role === "lead" ? "text-lg md:text-xl" : "text-base"} ${
             role === "standard" ? "hidden md:block" : ""
           }`}
         >
@@ -92,14 +98,15 @@ export default function HeadlineBlock({
             </div>
           )}
         </Link>
-        <p className="mt-2 flex flex-wrap items-center gap-2 font-label text-[11px] uppercase tracking-widest text-muted">
+        <p className="mt-2.5 flex flex-wrap items-center gap-2 font-label text-xs text-muted">
+          {item.word_count ? <span>{Math.max(1, Math.round(item.word_count / 230))} min read ·</span> : null}
           <span>{item.source_name}</span>
           {item.published_at && <span>· {timeAgo(item.published_at)}</span>}
-          {read && <span className="border border-muted/60 px-1 text-[9px] leading-tight">Read</span>}
+          {read && <span className="border border-muted/60 px-1 text-xs uppercase leading-tight tracking-wider">Read</span>}
         </p>
       </div>
       {skipped ? (
-        <p className="mt-1 font-label text-[11px] uppercase tracking-widest">
+        <p className="mt-1 font-label text-xs uppercase tracking-widest">
           Skipped ·{" "}
           <button type="button" onClick={onUndo} className="text-accent underline">
             Undo

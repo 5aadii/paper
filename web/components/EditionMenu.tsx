@@ -39,12 +39,12 @@ export default function EditionMenu({ editionId, canRegenerate }: { editionId: s
     router.refresh();
   }
 
-  const item = "block w-full px-4 py-2 text-left hover:bg-ink hover:text-paper";
+  const item = "block w-full rounded-xl px-3 py-2 text-left font-label text-[14px] hover:bg-accent hover:text-white";
   return (
     <span className="relative flex items-center gap-2" ref={ref}>
       <a
         href={`/api/pdf/${editionId}`}
-        className="hidden items-center gap-1 border border-ink px-2 py-0.5 hover:bg-ink hover:text-paper sm:inline-flex"
+        className="btn btn-glass btn-sm"
       >
         <Download size={12} aria-hidden /> PDF
       </a>
@@ -53,12 +53,12 @@ export default function EditionMenu({ editionId, canRegenerate }: { editionId: s
         aria-label="More options"
         aria-expanded={open}
         onClick={() => setOpen(!open)}
-        className="border border-ink px-1.5 py-0.5 hover:bg-ink hover:text-paper"
+        className="btn btn-glass btn-sm"
       >
         <MoreHorizontal size={14} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-30 mt-1 w-48 border border-ink bg-paper py-1 normal-case tracking-normal shadow-[3px_3px_0_0_#1a1a1a]">
+        <div className="absolute right-0 top-full z-30 mt-2 w-52 overflow-hidden rounded-2xl glass-strong sheet-in p-1 normal-case tracking-normal">
           <Link className={item} href="/archive">Archive</Link>
           <Link className={item} href="/interests">Your interests</Link>
           {canRegenerate && (

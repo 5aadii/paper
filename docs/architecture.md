@@ -1,5 +1,7 @@
 # Architecture — The Morning Edition
 
+![Architecture diagram](architecture.png)
+
 ```mermaid
 flowchart LR
     U[Reader's browser] -->|pages, auth| W[Next.js on Vercel]
@@ -29,6 +31,8 @@ limit every reader to their own rows. A trigger creates the profile on sign-up.
 2. Build a feed list from the reader's topics, custom phrases and region, plus 3 "Explore" topics they don't follow.
 3. Fetch every feed in parallel (8 s timeout each; failures are skipped).
 4. De-duplicate (URL + near-duplicate titles), drop old, repeated and skipped stories, and score the rest locally.
+   Then read the top 20 candidates in full: Google News links are resolved to the publisher, and the article
+   text, lead photo and byline are extracted (trafilatura). Stories the editor picks later are read too.
 5. Make **one** OpenRouter call: the AI editor picks and orders stories and writes headlines, deks, summaries,
    key points, "why this", the editor's note and "Three Things".
 6. Validate and repair the AI output. If the call fails for any reason, a local fallback edition is built from the

@@ -2,8 +2,10 @@ fastapi
 uvicorn[standard]
 httpx
 feedparser
+trafilatura
 supabase
 reportlab
+pillow
 python-dotenv
 pydantic
 tzdata

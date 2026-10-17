@@ -54,3 +54,42 @@ def test_fallback_layout_shape():
     assert len(lay["stories"]) == 11 and roles.count("lead") == 1 and roles.count("brief") == 3
     assert any(s["section"] == "Explore" for s in lay["stories"])
     assert len(lay["three_things"]) == 3 and lay["editors_note"].startswith("Good morning, Saad.")
+
+
+def test_photo_lead_is_promoted():
+    from edition_builder import promote_photo_lead
+    cands = {"c1": {"image_url": None, "is_explore": False}, "c2": {"image_url": "https://x/p.jpg", "is_explore": False}}
+    stories = [{"id": "c1", "layout_role": "lead"}, {"id": "c2", "layout_role": "feature"}]
+    promote_photo_lead(stories, cands)
+    assert stories[0]["layout_role"] == "feature" and stories[1]["layout_role"] == "lead"
+
+
+def test_thin_headline_only_items_rank_lower():
+    from ranking import score_article
+    rich = art("https://a.com/1", "A long enough headline about something")
+    rich["snippet"] = "A real paragraph from the publisher with enough detail to summarise the story properly."
+    thin = art("https://b.com/2", "Another long enough headline about something")
+    thin["snippet"] = ""
+    w = {"technology": 1.0}
+    assert score_article(rich, NOW, w, {}, []) > score_article(thin, NOW, w, {}, [])
+
+
+def test_pakistan_region_still_fetches_publisher_feeds():
+    from edition_builder import build_feed_specs
+    from sources import TOPICS
+    specs = build_feed_specs([{"topic": "world", "weight": 1.0}], "pakistan")
+    urls = {s["url"] for s in specs if not s["is_explore"]}
+    assert set(TOPICS["world"]["feeds"]) <= urls
+    assert any("gl=PK" in u for u in urls) and not any("gl=US" in u for u in urls)
+
+
+def test_photos_fill_lead_and_features():
+    from edition_builder import promote_photo_lead
+    cands = {f"c{i}": {"image_url": ("https://x/p.jpg" if i >= 4 else None), "is_explore": False} for i in range(1, 7)}
+    stories = [{"id": "c1", "layout_role": "lead"}, {"id": "c2", "layout_role": "feature"},
+               {"id": "c3", "layout_role": "feature"}, {"id": "c4", "layout_role": "standard"},
+               {"id": "c5", "layout_role": "standard"}, {"id": "c6", "layout_role": "standard"}]
+    promote_photo_lead(stories, cands)
+    roles = {s["id"]: s["layout_role"] for s in stories}
+    assert [roles[c] for c in ("c4", "c5", "c6")].count("standard") == 0
+    assert sorted(roles.values()) == ["feature", "feature", "lead", "standard", "standard", "standard"]

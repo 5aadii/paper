@@ -86,7 +86,7 @@ export default function PrintingScreen({
             <button
               type="button"
               onClick={() => generate(status === "failed")}
-              className="mt-8 bg-accent px-6 py-3 font-label text-xs font-semibold uppercase tracking-widest text-paper"
+              className="btn btn-primary mt-8"
             >
               Try again
             </button>
@@ -105,7 +105,7 @@ export default function PrintingScreen({
                 <li key={s} className={`h-1.5 w-10 ${i <= current ? "bg-accent" : "bg-ink/15"}`} />
               ))}
             </ol>
-            <p className="mt-8 font-label text-[11px] uppercase tracking-widest text-muted">
+            <p className="mt-8 font-label text-xs uppercase tracking-widest text-muted">
               Gathering stories from dozens of sources · usually 20–60 seconds
             </p>
           </>

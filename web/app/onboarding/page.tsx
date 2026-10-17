@@ -32,7 +32,9 @@ export default function OnboardingPage() {
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) return;
       const { data: p } = await supabase.from("profiles").select("display_name").eq("id", data.user.id).maybeSingle();
-      const name = p?.display_name || (data.user.user_metadata?.display_name as string) || "";
+      const meta = data.user.user_metadata ?? {};
+      const full = (p?.display_name || meta.display_name || meta.given_name || meta.full_name || meta.name || "") as string;
+      const name = full.split(" ")[0];
       if (name) setAnswersState((a) => (a.displayName ? a : { ...a, displayName: name }));
     });
   }, []);
@@ -92,7 +94,7 @@ export default function OnboardingPage() {
 
   return (
     <main
-      className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-28 pt-12"
+      className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pb-28 pt-8"
       onKeyDown={(e) => {
         if (e.key === "Enter" && !(e.target instanceof HTMLButtonElement)) {
           e.preventDefault();
@@ -100,11 +102,9 @@ export default function OnboardingPage() {
         }
       }}
     >
+      <p className="mb-3 text-center font-masthead text-xl font-bold">The Morning Edition</p>
       <ProgressBar step={step} total={TOTAL} />
-      <p className="font-label text-[11px] uppercase tracking-widest text-muted">
-        Step {step + 1} of {TOTAL}
-      </p>
-      <div className="mt-4">
+      <div key={step} className="mt-8 animate-[fadein_.25s_ease-out]">
         {step === 0 && <StepName answers={answers} setAnswers={setAnswers} />}
         {step === 1 && <StepTopics answers={answers} setAnswers={setAnswers} />}
         {step === 2 && <StepSpecific answers={answers} setAnswers={setAnswers} />}
@@ -112,7 +112,7 @@ export default function OnboardingPage() {
       </div>
       {error && <p className="mt-6 font-body text-accent">{error}</p>}
       <div className="fixed inset-x-0 bottom-0 border-t border-rule bg-paper">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
           <button
             type="button"
             onClick={() => setStep(Math.max(0, step - 1))}
@@ -130,7 +130,7 @@ export default function OnboardingPage() {
               type="button"
               onClick={next}
               disabled={!canNext || busy}
-              className="bg-accent px-6 py-3 font-label text-xs font-semibold uppercase tracking-widest text-paper disabled:opacity-40"
+              className="btn btn-primary disabled:opacity-40"
             >
               {busy ? "Printing…" : step === TOTAL - 1 ? "Print my paper" : "Next →"}
             </button>

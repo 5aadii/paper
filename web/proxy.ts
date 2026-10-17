@@ -1,14 +1,14 @@
 /**
  * Refresh the Supabase session and protect routes (SPEC Section 8.2).
- * Note: Next.js 16 prefers the name proxy.ts; middleware.ts still works (SPEC filename kept).
+ * Next.js 16 renamed middleware.ts to proxy.ts (SPEC Section 8.2 calls it middleware).
  */
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED = ["/today", "/archive", "/paper", "/interests", "/onboarding"];
+const PROTECTED = ["/today", "/games", "/cartoons", "/archive", "/paper", "/interests", "/onboarding", "/explore", "/assistant", "/settings", "/story"];
 const AUTH_PAGES = ["/", "/login", "/signup"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -62,5 +62,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|api/img|favicon.ico|.*\\.(?:json|svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
 };

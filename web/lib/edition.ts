@@ -19,7 +19,11 @@ export type EditionItem = {
   image_url: string | null;
   topic: string | null;
   is_explore: boolean;
+  word_count?: number | null;
 };
+
+/** The full text of one story, loaded only on its story page (kept off the front page payload). */
+export type StoryBody = { body: string | null; author: string | null; word_count: number | null };
 
 export type Edition = {
   edition_id: string;
@@ -70,7 +74,7 @@ export async function loadEdition(
 
   const { data: items } = await supabase
     .from("edition_items")
-    .select("*, articles(url, source_name, published_at, image_url)")
+    .select("*, articles(url, source_name, published_at, image_url, word_count)")
     .eq("edition_id", row.id)
     .order("section_position")
     .order("position");
@@ -95,6 +99,7 @@ export async function loadEdition(
       image_url: a.image_url ?? null,
       topic: it.topic ?? null,
       is_explore: !!it.is_explore,
+      word_count: a.word_count ?? null,
     });
   }
 
@@ -114,6 +119,16 @@ export async function loadEdition(
       sections,
     },
   };
+}
+
+export async function loadStoryBody(supabase: SupabaseClient, itemId: string): Promise<StoryBody> {
+  const { data } = await supabase
+    .from("edition_items")
+    .select("articles(body, author, word_count)")
+    .eq("id", itemId)
+    .maybeSingle();
+  const a = ((data as any)?.articles ?? {}) as Partial<StoryBody>;
+  return { body: a.body || null, author: a.author || null, word_count: a.word_count ?? null };
 }
 
 /** Item ids this reader has opened in an edition (for READ tags). */
