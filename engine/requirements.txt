@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+httpx
+feedparser
+supabase
+reportlab
+python-dotenv
+pydantic
+tzdata
+pytest

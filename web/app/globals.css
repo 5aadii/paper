@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+/*
+ * "Newsprint" design tokens — SPEC Section 8.1.
+ * Use as Tailwind classes: bg-paper, text-ink, text-muted, border-rule, text-accent,
+ * font-headline, font-body, font-label.
+ */
+:root {
+  --paper: #fbf8f1;
+  --ink: #1a1a1a;
+  --muted: #5f5a50;
+  --rule: #1a1a1a;
+  --accent: #8b1e1e;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-rule: var(--rule);
+  --color-accent: var(--accent);
+
+  --font-headline: var(--font-playfair), Georgia, "Times New Roman", serif;
+  --font-body: var(--font-source-serif), Georgia, "Times New Roman", serif;
+  --font-label: var(--font-inter), Arial, Helvetica, sans-serif;
+  --font-sans: var(--font-inter), Arial, Helvetica, sans-serif;
+  --font-serif: var(--font-source-serif), Georgia, "Times New Roman", serif;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
